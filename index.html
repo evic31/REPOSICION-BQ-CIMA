@@ -16,6 +16,8 @@
             --tab-inactive-text: #495057;
             --header-bg: #343a40;
             --header-text: #ffffff;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
         }
 
         * {
@@ -216,7 +218,7 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            background-color: #dc3545;
+            background-color: var(--danger-color);
             color: var(--primary-accent-text);
             margin: 0 0.5rem;
             transition: background-color 0.2s;
@@ -230,6 +232,85 @@
             padding: 2rem;
             color: #888;
         }
+        /* Estilos para el nuevo contenido de Prótesis Junco */
+        .card {
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card h2, .card h3 {
+            margin-bottom: 1rem;
+        }
+        .card details {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+        .card summary {
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--primary-bg);
+            border-radius: 4px;
+        }
+        .row input, .row select, .row button {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        .cta {
+            background-color: var(--primary-accent);
+            color: var(--primary-accent-text);
+            border: none;
+            cursor: pointer;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            padding: 0.6rem;
+            border-radius: 4px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .table th, .table td {
+            text-align: left;
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .table th {
+            background-color: var(--primary-bg);
+        }
+        .table button {
+            padding: 0.3rem 0.6rem;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+        .btn-use { background-color: var(--primary-accent); }
+        .btn-sterilize { background-color: var(--success-color); }
+        .btn-delete { background-color: var(--danger-color); }
+        .used-row {
+            text-decoration: line-through;
+            color: #999;
+            background-color: #f9f9f9;
+        }
+
     </style>
 </head>
 <body>
@@ -247,6 +328,7 @@
     </div>
 
     <script>
+    // --- DATOS CHECKLIST ---
     const inventoryData = {
         "Reanimación": {
             "FARMACIA": [
@@ -327,7 +409,7 @@
                 { name: "TET", type: "number", options: [{ talla: "nº8", stock: 2 }, { talla: "nº7,5", stock: 4 }, { talla: "nº7", stock: 4 }, { talla: "nº6,5", stock: 2 }], storage: "ALMACÉN PASILLO DERECHO" },
                 { name: "Electrodos", type: "checkbox", storage: "ALMACÉN PASILLO DERECHO" }, { name: "Sulky", type: "number", stock: 1, storage: "FARMACIA" },
                 { name: "Pomada ocular", type: "number", stock: 1, storage: "FARMACIA" }, { name: "Capnografo", type: "number", stock: 2, storage: "ALMACÉN PASILLO DERECHO" },
-                { name: "Guedel", type: "number", options: [{ color: "Verde", stock: 2 }, { coloe: "Amarillo", stock: 3 }, { color: "Rojo", stock: 3 }, { Coloe: "Azul", stock: 2 }], storage: "ALMACÉN PASILLO DERECHO" },
+                { name: "Guedel", type: "number", options: [{ color: "Verde", stock: 2 }, { color: "Amarillo", stock: 3 }, { color: "Rojo", stock: 3 }, { color: "Azul", stock: 2 }], storage: "ALMACÉN PASILLO DERECHO" },
                 { name: "Sistema jeringa", type: "number", stock: 5, storage: "ALMACÉN PASILLO DERECHO" }, { name: "Jeringas bomba", type: "number", stock: 2, storage: "ALMACÉN PASILLO DERECHO" },
                 { name: "Rasuradoras", type: "number", stock: 2, storage: "ALMACÉN PASILLO DERECHO" }, { name: "Venda gasa", type: "checkbox", storage: "ALMACÉN PASILLO DERECHO" },
                 { name: "Sistema estandar", type: "number", stock: 3, storage: "ALMACÉN PASILLO DERECHO" }, { name: "Alargadera", type: "number", stock: 2, storage: "ALMACÉN PASILLO DERECHO" },
@@ -374,31 +456,154 @@
                 { name: "Sábanas", type: "checkbox", storage: "ARMARIO LENCERIA" }, { name: "Taburete", type: "number", stock: 4, storage: "ALMACÉN PASILLO DERECHO" },
                 { name: "Bomba infusión", type: "checkbox", storage: "BLOQUE QUIRÚRGICO" }
             ]
-        },
-        "Prótesis Junco": {
-            "REDONDAS": [
-                { name: "350", type: "checkbox", options: ["ESTERIL", "NO ESTERIL"], storage: "ALMACÉN PASILLO IZQUIERDO" },
-                { name: "320", type: "checkbox", options: ["ESTERIL", "NO ESTERIL"], storage: "ALMACÉN PASILLO IZQUIERDO" }
-            ]
         }
     };
 
-    // --- APP LOGIC ---
+    // --- LÓGICA PRINCIPAL DE LA APP ---
     document.addEventListener('DOMContentLoaded', () => {
-        const tabsContainer = document.getElementById('tabs');
-        const tabContentsContainer = document.getElementById('tab-contents');
-        const STORAGE_KEY = 'hospitalInventoryState_v12';
-
+        // --- VARIABLES GLOBALES CHECKLIST ---
+        const checklistTabsContainer = document.getElementById('tabs');
+        const checklistTabContentsContainer = document.getElementById('tab-contents');
+        const CHECKLIST_STORAGE_KEY = 'hospitalInventoryState_v12';
         const tabOrder = [
             "Reanimación", "UCSI", "Quirófano 6", "Quirófano 5", "Quirófano 4",
             "Quirófano 3", "Quirófano 2", "Quirófano 1", "Hemodinamia",
             "Quirófano 8", "Quirófano 7", "Prótesis Junco", "Resumen"
         ];
-        
         const ID_SEPARATOR = '||';
-        let appState = {};
+        let checklistState = {};
 
+        // --- INICIALIZACIÓN GENERAL ---
         function init() {
+            // Lógica del Checklist
+            initChecklist();
+            
+            // Lógica de Prótesis
+            initProtesis();
+        }
+        
+        // --- LÓGICA PARA PRÓTESIS JUNCO ---
+        const PROTESIS_STORAGE_KEY = 'protesisStock_v1';
+        let protesisStock = [];
+
+        function initProtesis() {
+            // Cargar datos guardados
+            const savedProtesis = localStorage.getItem(PROTESIS_STORAGE_KEY);
+            protesisStock = savedProtesis ? JSON.parse(savedProtesis) : [];
+
+            // Preparar los listeners
+            // Usamos el contenedor principal para que los elementos existan al asignar el listener
+            checklistTabContentsContainer.addEventListener('submit', handleProtesisFormSubmit);
+            checklistTabContentsContainer.addEventListener('click', handleProtesisTableClick);
+
+            // Renderizar las tablas por primera vez
+            renderProtesisTables();
+        }
+
+        function handleProtesisFormSubmit(event) {
+            if (event.target.id !== 'formProt') return; // Solo actuar si el evento viene del formulario correcto
+            
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const newProtesis = {
+                id: Date.now(), // ID único basado en la fecha
+                volume: formData.get('volume'),
+                proj: formData.get('proj') || 'N/A',
+                shape: formData.get('shape'),
+                sterilized: formData.has('sterilized'),
+                used: false
+            };
+
+            protesisStock.push(newProtesis);
+            saveProtesisStock();
+            renderProtesisTables();
+            form.reset();
+        }
+
+        function handleProtesisTableClick(event) {
+            const button = event.target.closest('button');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const id = parseInt(button.dataset.id, 10);
+            
+            const itemIndex = protesisStock.findIndex(p => p.id === id);
+            if (itemIndex === -1) return;
+
+            if (action === 'use') {
+                protesisStock[itemIndex].used = true;
+                protesisStock[itemIndex].sterilized = false;
+            } else if (action === 'sterilize') {
+                protesisStock[itemIndex].sterilized = true;
+                protesisStock[itemIndex].used = false; // Al esterilizar, vuelve a estar disponible
+            } else if (action === 'delete') {
+                if (confirm('¿Seguro que quieres eliminar esta prótesis del inventario?')) {
+                    protesisStock.splice(itemIndex, 1);
+                }
+            }
+
+            saveProtesisStock();
+            renderProtesisTables();
+        }
+
+        function saveProtesisStock() {
+            localStorage.setItem(PROTESIS_STORAGE_KEY, JSON.stringify(protesisStock));
+        }
+
+        function renderProtesisTables() {
+            const tblStockBody = document.querySelector('#tblStock tbody');
+            const tblPendBody = document.querySelector('#tblPend tbody');
+
+            // Si las tablas no existen en el DOM aún, no hacer nada.
+            if (!tblStockBody || !tblPendBody) return;
+
+            // Limpiar tablas
+            tblStockBody.innerHTML = '';
+            tblPendBody.innerHTML = '';
+            
+            // Ordenar por volumen
+            const sortedStock = [...protesisStock].sort((a, b) => a.volume - b.volume);
+
+            sortedStock.forEach(p => {
+                if (p.sterilized) {
+                    const row = document.createElement('tr');
+                    if (p.used) row.classList.add('used-row');
+                    row.innerHTML = `
+                        <td>${p.volume} cc</td>
+                        <td>${p.proj}</td>
+                        <td>${p.shape}</td>
+                        <td>✔️</td>
+                        <td>${p.used ? 'Sí' : 'No'}</td>
+                        <td>
+                            <button class="btn-use" data-action="use" data-id="${p.id}" ${p.used ? 'disabled' : ''}>Usar</button>
+                            <button class="btn-delete" data-action="delete" data-id="${p.id}">Borrar</button>
+                        </td>
+                    `;
+                    tblStockBody.appendChild(row);
+                } else {
+                    const row = document.createElement('tr');
+                    if (p.used) row.classList.add('used-row');
+                     row.innerHTML = `
+                        <td>${p.volume} cc</td>
+                        <td>${p.proj}</td>
+                        <td>${p.shape}</td>
+                        <td>
+                            <button class="btn-sterilize" data-action="sterilize" data-id="${p.id}">Esterilizar</button>
+                        </td>
+                        <td>
+                            <button class="btn-delete" data-action="delete" data-id="${p.id}">Borrar</button>
+                        </td>
+                    `;
+                    tblPendBody.appendChild(row);
+                }
+            });
+        }
+
+
+        // --- LÓGICA PARA CHECKLIST ---
+        function initChecklist() {
             ["1", "2", "3", "4", "5", "6", "7", "8", "Hemodinamia"].forEach(num => {
                 const key = num === "Hemodinamia" ? "Hemodinamia" : `Quirófano ${num}`;
                 if (!inventoryData[key]) {
@@ -407,20 +612,20 @@
             });
             delete inventoryData.template_quirofano;
             
-            loadState();
+            loadChecklistState();
             renderTabs();
             renderAllTabContents();
             
-            const firstTab = tabsContainer.querySelector('.tab');
+            const firstTab = checklistTabsContainer.querySelector('.tab');
             if (firstTab) switchTab(firstTab.dataset.tab);
             
-            tabContentsContainer.addEventListener('change', handleInputChange);
+            checklistTabContentsContainer.addEventListener('change', handleChecklistInputChange);
         }
         
-        function handleInputChange(event) {
+        function handleChecklistInputChange(event) {
             const target = event.target;
             if (target.matches('input[type="checkbox"], select')) {
-                saveState();
+                saveChecklistState();
                 const activeTabName = document.querySelector('.tab.active')?.dataset.tab;
                 if (activeTabName === 'Resumen') {
                     renderSummary();
@@ -428,9 +633,9 @@
             }
         }
 
-        function saveState() {
+        function saveChecklistState() {
             const currentState = {};
-            const inputs = tabContentsContainer.querySelectorAll('input[type="checkbox"], select');
+            const inputs = checklistTabContentsContainer.querySelectorAll('input[type="checkbox"], select');
             inputs.forEach(input => {
                 if (input.type === 'checkbox' && input.checked) {
                     currentState[input.id] = true;
@@ -438,21 +643,21 @@
                     currentState[input.id] = input.value;
                 }
             });
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
-            appState = currentState;
+            localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(currentState));
+            checklistState = currentState;
         }
 
-        function loadState() {
-            const savedState = localStorage.getItem(STORAGE_KEY);
-            appState = savedState ? JSON.parse(savedState) : {};
+        function loadChecklistState() {
+            const savedState = localStorage.getItem(CHECKLIST_STORAGE_KEY);
+            checklistState = savedState ? JSON.parse(savedState) : {};
         }
 
         function renderTabs() {
-            tabsContainer.innerHTML = tabOrder.map(tabName =>
+            checklistTabsContainer.innerHTML = tabOrder.map(tabName =>
                 `<button class="tab" data-tab="${tabName}">${tabName}</button>`
             ).join('');
             
-            tabsContainer.addEventListener('click', (e) => {
+            checklistTabsContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('tab')) switchTab(e.target.dataset.tab);
             });
         }
@@ -474,9 +679,48 @@
         }
 
         function renderAllTabContents() {
-            tabContentsContainer.innerHTML = tabOrder.map(tabName => {
+            checklistTabContentsContainer.innerHTML = tabOrder.map(tabName => {
                 const contentId = `content-${tabName.replace(/\s+/g, '-')}`;
-                if (tabName === 'Resumen') return `<div class="tab-content" id="${contentId}"></div>`;
+
+                if (tabName === 'Resumen') {
+                    return `<div class="tab-content" id="${contentId}"></div>`;
+                }
+
+                if (tabName === 'Prótesis Junco') {
+                    return `
+                        <div class="tab-content" id="${contentId}">
+                            <div class="card">
+                                <h2>👨‍⚕️ Cirugía Plástica Dr. Junco</h2>
+                                <details open>
+                                    <summary><strong>Inventario de Prótesis de Prueba</strong></summary>
+                                    <form class="row" id="formProt">
+                                        <input name="volume" type="number" min="0" step="1" placeholder="Volumen (cc)" required>
+                                        <input name="proj" type="text" placeholder="Proyección (805, 810, 812…)">
+                                        <select name="shape">
+                                            <option value="redonda">Redonda</option>
+                                            <option value="anatómica">Anatómica</option>
+                                        </select>
+                                        <label class="pill"><input name="sterilized" type="checkbox" checked> Esterilizada</label>
+                                        <button type="submit" class="cta">Añadir a stock</button>
+                                    </form>
+                                    <div style="overflow:auto;margin-top:10px">
+                                        <table class="table" id="tblStock">
+                                            <thead><tr><th>Volumen</th><th>Proyección</th><th>Forma</th><th>Esterilizada</th><th>Usada</th><th>Acciones</th></tr></thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                    <h3 style="margin-top:14px">Pendiente de esterilizar</h3>
+                                    <div style="overflow:auto">
+                                        <table class="table" id="tblPend">
+                                            <thead><tr><th>Volumen</th><th>Proyección</th><th>Forma</th><th>Acción</th><th></th></tr></thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    `;
+                }
                 
                 const areaData = inventoryData[tabName];
                 return `
@@ -514,7 +758,7 @@
                 const options = item.options && item.options.length > 0 ? item.options : [''];
                 controlsHtml = options.map(option => {
                     const optionId = option ? [baseId, option].join(ID_SEPARATOR) : baseId;
-                    const isChecked = appState[optionId] === true;
+                    const isChecked = checklistState[optionId] === true;
                     return `
                         <div class="checkbox-group">
                             <label for="${optionId}">
@@ -525,7 +769,7 @@
                     `;
                 }).join('');
             } else if (item.type === 'number') {
-                const value = appState[baseId] || '0';
+                const value = checklistState[baseId] || '0';
                 let optionsHtml = `<option value="0">Stock OK (${item.stock})</option>`;
                 for (let i = 1; i <= item.stock; i++) {
                     optionsHtml += `<option value="${i}" ${value == i ? 'selected' : ''}>Faltan ${i}</option>`;
@@ -564,8 +808,8 @@
                 }
             }
 
-            for (const inputId in appState) {
-                const value = appState[inputId];
+            for (const inputId in checklistState) {
+                const value = checklistState[inputId];
                 const parts = inputId.split(ID_SEPARATOR);
                 const [area, location, itemName, option] = parts;
 
@@ -592,7 +836,7 @@
                 }
             }
             
-            const hasMissingItems = Object.keys(appState).length > 0;
+            const hasMissingItems = Object.keys(checklistState).length > 0;
 
             let summaryHtml = `
                 <div class="summary-actions">
@@ -635,15 +879,16 @@
             
             document.getElementById('clear-all-data').addEventListener('click', () => {
                 if (confirm('¿Estás seguro de que quieres borrar todos los datos del checklist? Esta acción no se puede deshacer.')) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    appState = {};
-                    tabContentsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                    tabContentsContainer.querySelectorAll('select').forEach(sel => sel.value = '0');
+                    localStorage.removeItem(CHECKLIST_STORAGE_KEY);
+                    checklistState = {};
+                    checklistTabContentsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    checklistTabContentsContainer.querySelectorAll('select').forEach(sel => sel.value = '0');
                     renderSummary();
                 }
             });
         }
 
+        // --- INICIAR LA APLICACIÓN ---
         init();
     });
     </script>
