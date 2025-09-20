@@ -772,6 +772,11 @@
             const inputs = checklistTabContentsContainer.querySelectorAll('input[type="checkbox"], select');
             inputs.forEach(input => {
                 if (input.type === 'checkbox' && input.checked) {
+                    // Ignorar checkboxes del Resumen para no contaminar el estado principal
+                    if (input.classList.contains('sum-check') || input.classList.contains('sum-area-check') || 
+                        input.id.startsWith('Resumen') || input.id.startsWith('Area')) {
+                        return;
+                    }
                     currentState[input.id] = true;
                 } else if (input.tagName === 'SELECT' && input.value && parseInt(input.value, 10) > 0) {
                     currentState[input.id] = input.value;
@@ -784,6 +789,12 @@
         function loadChecklistState() {
             const savedState = localStorage.getItem(CHECKLIST_STORAGE_KEY);
             checklistState = savedState ? JSON.parse(savedState) : {};
+        }
+        // Limpieza preventiva: borrar claves antiguas del resumen
+        for (const k of Object.keys(checklistState)) {
+            if (k.startsWith('Resumen') || k.startsWith('Area')) {
+                delete checklistState[k];
+            }
         }
 
         function renderTabs() {
@@ -944,6 +955,8 @@
             }
 
             for (const inputId in checklistState) {
+                // Ignorar ids propios del Resumen (no pertenecen al checklist real)
+                if (inputId.startsWith('Resumen') || inputId.startsWith('Area')) continue;
                 const value = checklistState[inputId];
                 const parts = inputId.split(ID_SEPARATOR);
                 const [area, location, itemName, option] = parts;
