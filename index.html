@@ -944,9 +944,6 @@
             }
 
             for (const inputId in checklistState) {
-                if (inputId.startsWith('Resumen') || inputId.startsWith('Area')) {
-                    continue; // ignorar checkboxes del resumen
-                }
                 const value = checklistState[inputId];
                 const parts = inputId.split(ID_SEPARATOR);
                 const [area, location, itemName, option] = parts;
