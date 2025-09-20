@@ -378,6 +378,41 @@
   color: #888;
 }
 
+
+/* === Barra de Extensiones (siempre visible) === */
+#hotbar{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: .5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+#hotbar label{font-weight:600}
+#hotbar select{
+  min-width: 260px;
+  padding: .5rem .6rem;
+  border:1px solid var(--border-color);
+  border-radius:8px;
+  font-size:.95rem;
+}
+#hotbar .mini{
+  padding:.45rem .7rem;
+  border:1px solid var(--border-color);
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  font-size:.9rem;
+}
+#hotbar .mini.cta{
+  background: var(--primary-accent);
+  color: var(--primary-accent-text);
+  border-color: var(--primary-accent);
+}
+
 </style>
 </head>
 <body>
@@ -388,6 +423,13 @@
         </header>
 
         <div class="tabs-container">
+            <!-- Hotbar de extensiones -->
+            <div id="hotbar">
+              <label for="extSelect">Extensiones:</label>
+              <select id="extSelect"></select>
+              <button id="copyBtn" class="mini">Copiar</button>
+              <button id="addBtn" class="mini">＋ Añadir</button>
+            </div>
             <div class="tabs" id="tabs"></div>
         </div>
 
@@ -542,7 +584,60 @@
         }
     };
 
-    // --- LÓGICA PRINCIPAL DE LA APP ---
+    
+// --- EXTENSIONES (teléfonos útiles) ---
+const EXT_STORAGE_KEY = 'extensiones_v1';
+let extensiones = [];
+function loadExt() {
+  try{
+    const raw = localStorage.getItem(EXT_STORAGE_KEY);
+    extensiones = raw ? JSON.parse(raw) : [{"name": "Esterilización", "num": "739711"}, {"name": "UCSI", "num": "739714"}, {"name": "REA", "num": "739716"}, {"name": "Relax", "num": "739712"}, {"name": "Limpieza", "num": "732019"}, {"name": "QX 1", "num": "739721"}, {"name": "QX 2", "num": "739722"}, {"name": "QX 3", "num": "739723"}, {"name": "QX 4", "num": "739724"}, {"name": "QX 5", "num": "739725"}, {"name": "QX 6", "num": "739726"}, {"name": "Hemodinamia", "num": "739244"}, {"name": "Anestesista", "num": "732031"}, {"name": "Herms", "num": "367053"}, {"name": "Coordinador tarde", "num": "366914"}, {"name": "Códigos", "num": "739999"}, {"name": "3ª P. Mar", "num": "739356"}, {"name": "3ª P. Montaña", "num": "739350"}, {"name": "4ª Planta", "num": "739400"}, {"name": "5ª Planta", "num": "739556"}, {"name": "6ª Planta", "num": "739655"}, {"name": "Admisiones", "num": "739136"}, {"name": "Laboratorio", "num": "739853"}, {"name": "Partos", "num": "739292"}, {"name": "UCI", "num": "739443"}, {"name": "Urgencias", "num": "939810"}, {"name": "Resonancia", "num": "739921"}, {"name": "TAC", "num": "739912"}, {"name": "Sanitario", "num": "732016"}, {"name": "Seguridad", "num": "739950 - 732013"}, {"name": "Electromedicina", "num": "674242810"}];
+  }catch{ extensiones = []; }
+}
+function saveExt(){ localStorage.setItem(EXT_STORAGE_KEY, JSON.stringify(extensiones)); }
+function renderExt() {
+  const sel = document.getElementById('extSelect');
+  if(!sel) return;
+  sel.innerHTML = extensiones.map((e,i)=>`<option value="${i}">${e.name} — ${e.num}</option>`).join('');
+  sel.dispatchEvent(new Event('change')); // para refrescar botón llamar
+}
+function initExtBar(){
+  loadExt();
+  renderExt();
+  const sel = document.getElementById('extSelect');
+  const callBtn = document.getElementById('callBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const addBtn = document.getElementById('addBtn');
+  sel.addEventListener('change', ()=>{
+    const i = parseInt(sel.value||'0',10) || 0;
+    const num = extensiones[i]?.num || '';
+    if(callBtn) callBtn.href = num ? `tel:${num}` : '#';
+  });
+  copyBtn.addEventListener('click', async ()=>{
+    const i = parseInt(sel.value||'0',10) || 0;
+    const num = extensiones[i]?.num || '';
+    try{
+      await navigator.clipboard.writeText(num);
+      copyBtn.textContent = 'Copiado ✔';
+      setTimeout(()=> copyBtn.textContent='Copiar', 900);
+    }catch(e){
+      alert('No se pudo copiar. Número: '+num);
+    }
+  });
+  addBtn.addEventListener('click', ()=>{
+    const name = prompt('Nombre (ej. Quirófano 4):');
+    if(!name) return;
+    const num = prompt('Extensión (ej. 1234):');
+    if(!num) return;
+    extensiones.push({name, num});
+    saveExt();
+    renderExt();
+    document.getElementById('extSelect').value = String(extensiones.length-1);
+    sel.dispatchEvent(new Event('change'));
+  });
+}
+
+        // --- LÓGICA PRINCIPAL DE LA APP ---
     document.addEventListener('DOMContentLoaded', () => {
         // --- VARIABLES GLOBALES CHECKLIST ---
         const checklistTabsContainer = document.getElementById('tabs');
@@ -1093,6 +1188,7 @@
     }
 
         // --- INICIAR LA APLICACIÓN ---
+        initExtBar();
         init();
     });
     </script>
